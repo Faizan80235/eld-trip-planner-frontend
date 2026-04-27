@@ -1,0 +1,47 @@
+.stops-summary { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.stops-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.stat {
+  background: #f7fafc;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.stat-icon { font-size: 1.5rem; }
+.stat-label { font-size: 0.75rem; color: #718096; }
+.stat-value { font-size: 1.1rem; font-weight: 700; color: #1a365d; }
+
+.stops-timeline h3 { font-size: 1rem; color: #1a365d; margin-bottom: 1rem; }
+
+.stop-item {
+  background: #f7fafc;
+  border-radius: 0 8px 8px 0;
+  padding: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.stop-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.stop-icon { font-size: 1.2rem; }
+.stop-type { font-size: 0.8rem; font-weight: 700; }
+.stop-day { margin-left: auto; font-size: 0.75rem; color: #718096; background: #e2e8f0; padding: 2px 8px; border-radius: 10px; }
+.stop-location { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem; }
+.stop-meta { display: flex; gap: 1rem; font-size: 0.8rem; color: #718096; margin-bottom: 0.3rem; }
+.stop-desc { font-size: 0.8rem; color: #a0aec0; }
+
+@media (max-width: 768px) {
+  .stops-stats { grid-template-columns: repeat(2, 1fr); }
+}
