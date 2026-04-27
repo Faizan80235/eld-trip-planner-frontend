@@ -92,7 +92,9 @@ function MapView({ routeData, stops }) {
           </Marker>
         ))}
 
+
       </MapContainer>
+
 
       {/* Route Info */}
       <div style={{ marginTop: '1rem', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
