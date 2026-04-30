@@ -1,9 +1,9 @@
-
 import { useState, useRef, useEffect } from 'react';
+import { MapPin, Clock, Truck, Loader2, Navigation } from 'lucide-react';
 import './TripForm.css';
 
 // Location Input with FAST autocomplete
-function LocationInput({ label, name, value, onChange, placeholder }) {
+function LocationInput({ label, icon: Icon, name, value, onChange, placeholder }) {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -30,14 +30,12 @@ function LocationInput({ label, name, value, onChange, placeholder }) {
       return;
     }
 
-    // Cache
     if (cacheRef.current[query]) {
       setSuggestions(cacheRef.current[query]);
       setShowSuggestions(true);
       return;
     }
 
-    //  Cancel old request
     if (abortRef.current) abortRef.current.abort();
     abortRef.current = new AbortController();
 
@@ -46,10 +44,7 @@ function LocationInput({ label, name, value, onChange, placeholder }) {
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=6&addressdetails=1`,
-        {
-          signal: abortRef.current.signal,
-          headers: { 'Accept-Language': 'en' },
-        }
+        { signal: abortRef.current.signal }
       );
 
       const data = await res.json();
@@ -70,14 +65,11 @@ function LocationInput({ label, name, value, onChange, placeholder }) {
       );
 
       cacheRef.current[query] = unique;
-
       setSuggestions(unique);
       setShowSuggestions(true);
       setActiveIndex(-1);
     } catch (err) {
-      if (err.name !== 'AbortError') {
-        console.error(err);
-      }
+      if (err.name !== 'AbortError') console.error(err);
     } finally {
       setLoading(false);
     }
@@ -90,7 +82,7 @@ function LocationInput({ label, name, value, onChange, placeholder }) {
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       fetchSuggestions(val);
-    }, 200); // ⚡ faster
+    }, 200);
   };
 
   const handleSelect = (suggestion) => {
@@ -99,52 +91,38 @@ function LocationInput({ label, name, value, onChange, placeholder }) {
     setSuggestions([]);
   };
 
-  const handleKeyDown = (e) => {
-    if (!showSuggestions) return;
-
-    if (e.key === 'ArrowDown') {
-      setActiveIndex((prev) =>
-        prev < suggestions.length - 1 ? prev + 1 : prev
-      );
-    } else if (e.key === 'ArrowUp') {
-      setActiveIndex((prev) => (prev > 0 ? prev - 1 : 0));
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      if (activeIndex >= 0) {
-        handleSelect(suggestions[activeIndex]);
-      }
-    }
-  };
-
   return (
     <div className="form-group autocomplete-wrapper" ref={wrapperRef}>
-      <label>{label}</label>
+      <label className="label-with-icon">
+        {Icon && <Icon size={16} />}
+        {label}
+      </label>
 
       <input
         type="text"
         name={name}
         value={value}
         onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-        onFocus={() => suggestions.length && setShowSuggestions(true)}
         placeholder={placeholder}
         autoComplete="off"
         required
       />
 
-      {loading && <div className="autocomplete-loading">Searching...</div>}
+      {loading && (
+        <div className="autocomplete-loading">
+          <Loader2 size={16} className="spin" /> Searching...
+        </div>
+      )}
 
       {showSuggestions && suggestions.length > 0 && (
         <ul className="autocomplete-list">
           {suggestions.map((s, i) => (
             <li
               key={i}
-              className={`autocomplete-item ${
-                i === activeIndex ? 'active' : ''
-              }`}
+              className={`autocomplete-item ${i === activeIndex ? 'active' : ''}`}
               onMouseDown={() => handleSelect(s)}
             >
-              📍 {s.display}
+              <MapPin size={14} /> {s.display}
             </li>
           ))}
         </ul>
@@ -153,7 +131,7 @@ function LocationInput({ label, name, value, onChange, placeholder }) {
   );
 }
 
-// ✅ MAIN Trip Form
+// MAIN FORM
 function TripForm({ onSubmit, loading }) {
   const [formData, setFormData] = useState({
     current_location: '',
@@ -183,7 +161,8 @@ function TripForm({ onSubmit, loading }) {
         <div className="form-grid">
 
           <LocationInput
-            label="📍 Current Location"
+            label="Current Location"
+            icon={MapPin}
             name="current_location"
             value={formData.current_location}
             onChange={handleChange}
@@ -191,7 +170,8 @@ function TripForm({ onSubmit, loading }) {
           />
 
           <LocationInput
-            label="🟢 Pickup Location"
+            label="Pickup Location"
+            icon={Navigation}
             name="pickup_location"
             value={formData.pickup_location}
             onChange={handleChange}
@@ -199,7 +179,8 @@ function TripForm({ onSubmit, loading }) {
           />
 
           <LocationInput
-            label="🔴 Dropoff Location"
+            label="Dropoff Location"
+            icon={Navigation}
             name="dropoff_location"
             value={formData.dropoff_location}
             onChange={handleChange}
@@ -207,7 +188,11 @@ function TripForm({ onSubmit, loading }) {
           />
 
           <div className="form-group">
-            <label>⏱️ Current Cycle Used (Hours)</label>
+            <label className="label-with-icon">
+              <Clock size={16} />
+              Current Cycle Used (Hours)
+            </label>
+
             <input
               type="number"
               name="current_cycle_used"
@@ -218,6 +203,7 @@ function TripForm({ onSubmit, loading }) {
               step="0.5"
               required
             />
+
             <span className="input-hint">
               Hours used in current 70hr/8-day cycle (0-70)
             </span>
@@ -226,7 +212,8 @@ function TripForm({ onSubmit, loading }) {
         </div>
 
         <button type="submit" className="submit-btn" disabled={loading}>
-          {loading ? '⏳ Calculating...' : '🚛 Calculate Route & Generate Logs'}
+          <Truck size={16} />
+          {loading ? ' Calculating...' : ' Calculate Route & Generate Logs'}
         </button>
       </form>
     </div>

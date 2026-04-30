@@ -5,10 +5,18 @@ import LogSheet from './components/LogSheet';
 import StopsSummary from './components/StopsSummary';
 import { calculateRoute } from './api';
 
+import {
+  Truck,
+  Map,
+  ListChecks,
+  FileText,
+  AlertTriangle,
+  Loader2,
+  Calendar,
+  Route
+} from 'lucide-react';
+
 import './App.css';
-
-
-
 
 function App() {
   const [tripResult, setTripResult] = useState(null);
@@ -35,114 +43,143 @@ function App() {
 
   return (
     <div className="app">
-      {/* Header */}
+
+      {/* HEADER */}
       <header className="header">
         <div className="header-content">
+
           <div className="logo">
-            <span className="logo-icon">🚛</span>
+            <Truck className="logo-icon" size={28} />
             <div>
               <h1>ELD Trip Planner</h1>
               <p>HOS Compliant Route Planning</p>
             </div>
           </div>
-          <div className="header-badge">70hr/8-day Rule</div>
+
+          <div className="header-badge">
+            <Calendar size={14} />
+            70hr/8-day Rule
+          </div>
+
         </div>
       </header>
 
       <main className="main">
-        {/* Trip Form */}
+
+        {/* FORM */}
         <div className="form-section">
           <TripForm onSubmit={handleSubmit} loading={loading} />
         </div>
 
-        {/* Error */}
+        {/* ERROR */}
         {error && (
           <div className="error-box">
-            ⚠️ {error}
+            <AlertTriangle size={16} />
+            {error}
           </div>
         )}
 
-        {/* Loading */}
+        {/* LOADING */}
         {loading && (
           <div className="loading-box">
-            <div className="spinner"></div>
+            <Loader2 className="spin" size={20} />
             <p>Calculating your HOS compliant route...</p>
           </div>
         )}
 
-        {/* Results */}
+        {/* RESULTS */}
         {tripResult && (
           <div className="results-section">
 
-            {/* Summary Cards */}
+            {/* SUMMARY CARDS */}
             <div className="summary-cards">
+
               <div className="card">
-                <span className="card-icon">📍</span>
+                <Route className="card-icon" />
                 <div>
                   <p className="card-label">Total Miles</p>
                   <p className="card-value">{tripResult.summary.total_miles} mi</p>
                 </div>
               </div>
+
               <div className="card">
-                <span className="card-icon">⏱️</span>
+                <Loader2 className="card-icon" />
                 <div>
                   <p className="card-label">Total Hours</p>
                   <p className="card-value">{tripResult.summary.total_hours?.toFixed(1)} hrs</p>
                 </div>
               </div>
+
               <div className="card">
-                <span className="card-icon">📅</span>
+                <Calendar className="card-icon" />
                 <div>
                   <p className="card-label">Total Days</p>
                   <p className="card-value">{tripResult.summary.total_days} days</p>
                 </div>
               </div>
+
               <div className="card">
-                <span className="card-icon">🛑</span>
+                <ListChecks className="card-icon" />
                 <div>
                   <p className="card-label">Total Stops</p>
                   <p className="card-value">{tripResult.summary.stops_count}</p>
                 </div>
               </div>
+
             </div>
 
-            {/* Tabs */}
+            {/* TABS */}
             <div className="tabs">
+
               <button
                 className={`tab ${activeTab === 'map' ? 'active' : ''}`}
                 onClick={() => setActiveTab('map')}
               >
-                🗺️ Route Map
+                <Map size={16} />
+                Route Map
               </button>
+
               <button
                 className={`tab ${activeTab === 'stops' ? 'active' : ''}`}
                 onClick={() => setActiveTab('stops')}
               >
-                🛑 Stops
+                <ListChecks size={16} />
+                Stops
               </button>
+
               <button
                 className={`tab ${activeTab === 'logs' ? 'active' : ''}`}
                 onClick={() => setActiveTab('logs')}
               >
-                📋 Daily Logs
+                <FileText size={16} />
+                Daily Logs
               </button>
+
             </div>
 
-            {/* Tab Content */}
+            {/* CONTENT */}
             <div className="tab-content">
+
               {activeTab === 'map' && (
-                <MapView routeData={tripResult.route} stops={tripResult.trip_schedule.stops} />
+                <MapView
+                  routeData={tripResult.route}
+                  stops={tripResult.trip_schedule.stops}
+                />
               )}
+
               {activeTab === 'stops' && (
                 <StopsSummary stops={tripResult.trip_schedule.stops} />
               )}
+
               {activeTab === 'logs' && (
                 <LogSheet dailyLogs={tripResult.daily_logs} />
               )}
+
             </div>
 
           </div>
         )}
+
       </main>
     </div>
   );
