@@ -1,9 +1,25 @@
 import { useState, useRef, useEffect } from 'react';
-import { MapPin, Clock, Truck, Loader2, Navigation } from 'lucide-react';
+import { MapPin, Navigation, Circle, CircleDot, Clock, Truck, Loader2 } from 'lucide-react';
 import './TripForm.css';
 
-// Location Input with FAST autocomplete
-function LocationInput({ label, icon: Icon, name, value, onChange, placeholder }) {
+function isValidLocation(value) {
+  if (!value) return false;
+
+  const trimmed = value.trim();
+
+  if (trimmed.length < 4) return false;
+
+  if (!/[a-zA-Z]/.test(trimmed)) return false;
+
+  if (!/^[a-zA-Z\s,.-]+$/.test(trimmed)) return false;
+
+  const words = trimmed.split(" ").filter(w => w.length > 1);
+  if (words.length < 1) return false;
+
+  return true;
+}
+
+function LocationInput({ label, icon: Icon, iconColor, name, value, onChange, placeholder }) {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -44,7 +60,10 @@ function LocationInput({ label, icon: Icon, name, value, onChange, placeholder }
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=6&addressdetails=1`,
-        { signal: abortRef.current.signal }
+        {
+          signal: abortRef.current.signal,
+          headers: { 'Accept-Language': 'en' },
+        }
       );
 
       const data = await res.json();
@@ -69,7 +88,9 @@ function LocationInput({ label, icon: Icon, name, value, onChange, placeholder }
       setShowSuggestions(true);
       setActiveIndex(-1);
     } catch (err) {
-      if (err.name !== 'AbortError') console.error(err);
+      if (err.name !== 'AbortError') {
+        console.error(err);
+      }
     } finally {
       setLoading(false);
     }
@@ -91,10 +112,23 @@ function LocationInput({ label, icon: Icon, name, value, onChange, placeholder }
     setSuggestions([]);
   };
 
+  const handleKeyDown = (e) => {
+    if (!showSuggestions) return;
+
+    if (e.key === 'ArrowDown') {
+      setActiveIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : prev));
+    } else if (e.key === 'ArrowUp') {
+      setActiveIndex((prev) => (prev > 0 ? prev - 1 : 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeIndex >= 0) handleSelect(suggestions[activeIndex]);
+    }
+  };
+
   return (
     <div className="form-group autocomplete-wrapper" ref={wrapperRef}>
-      <label className="label-with-icon">
-        {Icon && <Icon size={16} />}
+      <label className="form-label">
+        {Icon && <Icon size={15} color={iconColor} strokeWidth={2} />}
         {label}
       </label>
 
@@ -103,6 +137,8 @@ function LocationInput({ label, icon: Icon, name, value, onChange, placeholder }
         name={name}
         value={value}
         onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+        onFocus={() => suggestions.length && setShowSuggestions(true)}
         placeholder={placeholder}
         autoComplete="off"
         required
@@ -110,7 +146,8 @@ function LocationInput({ label, icon: Icon, name, value, onChange, placeholder }
 
       {loading && (
         <div className="autocomplete-loading">
-          <Loader2 size={16} className="spin" /> Searching...
+          <Loader2 size={13} className="spin" />
+          Searching...
         </div>
       )}
 
@@ -119,10 +156,11 @@ function LocationInput({ label, icon: Icon, name, value, onChange, placeholder }
           {suggestions.map((s, i) => (
             <li
               key={i}
-              className={`autocomplete-item ${i === activeIndex ? 'active' : ''}`}
+              className={i === activeIndex ? 'active' : ''}
               onMouseDown={() => handleSelect(s)}
             >
-              <MapPin size={14} /> {s.display}
+              <MapPin size={13} />
+              {s.display}
             </li>
           ))}
         </ul>
@@ -131,7 +169,6 @@ function LocationInput({ label, icon: Icon, name, value, onChange, placeholder }
   );
 }
 
-// MAIN FORM
 function TripForm({ onSubmit, loading }) {
   const [formData, setFormData] = useState({
     current_location: '',
@@ -145,24 +182,33 @@ function TripForm({ onSubmit, loading }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const isFormValid =
+    isValidLocation(formData.current_location) &&
+    isValidLocation(formData.pickup_location) &&
+    isValidLocation(formData.dropoff_location);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!isFormValid) {
+      alert("Invalid input. Please enter real city names like Chicago, IL or Lahore, Punjab");
+      return;
+    }
+
     onSubmit(formData);
   };
 
   return (
     <div className="trip-form">
       <h2>Plan Your Trip</h2>
-      <p className="form-subtitle">
-        Enter trip details to generate HOS compliant route & log sheets
-      </p>
 
       <form onSubmit={handleSubmit}>
         <div className="form-grid">
 
           <LocationInput
             label="Current Location"
-            icon={MapPin}
+            icon={Navigation}
+            iconColor="#185FA5"
             name="current_location"
             value={formData.current_location}
             onChange={handleChange}
@@ -171,7 +217,8 @@ function TripForm({ onSubmit, loading }) {
 
           <LocationInput
             label="Pickup Location"
-            icon={Navigation}
+            icon={CircleDot}
+            iconColor="#3B6D11"
             name="pickup_location"
             value={formData.pickup_location}
             onChange={handleChange}
@@ -180,7 +227,8 @@ function TripForm({ onSubmit, loading }) {
 
           <LocationInput
             label="Dropoff Location"
-            icon={Navigation}
+            icon={Circle}
+            iconColor="#A32D2D"
             name="dropoff_location"
             value={formData.dropoff_location}
             onChange={handleChange}
@@ -188,8 +236,8 @@ function TripForm({ onSubmit, loading }) {
           />
 
           <div className="form-group">
-            <label className="label-with-icon">
-              <Clock size={16} />
+            <label className="form-label">
+              <Clock size={15} />
               Current Cycle Used (Hours)
             </label>
 
@@ -203,17 +251,12 @@ function TripForm({ onSubmit, loading }) {
               step="0.5"
               required
             />
-
-            <span className="input-hint">
-              Hours used in current 70hr/8-day cycle (0-70)
-            </span>
           </div>
 
         </div>
 
-        <button type="submit" className="submit-btn" disabled={loading}>
-          <Truck size={16} />
-          {loading ? ' Calculating...' : ' Calculate Route & Generate Logs'}
+        <button type="submit" disabled={loading || !isFormValid}>
+          {loading ? 'Calculating...' : 'Calculate Route'}
         </button>
       </form>
     </div>
