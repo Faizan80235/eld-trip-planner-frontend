@@ -254,8 +254,8 @@ function TripForm({ onSubmit, loading }) {
           </div>
 
         </div>
-
-        <button type="submit" disabled={loading || !isFormValid}>
+         
+        <button type="submit" disabled={loading || !isFormValid} className='submit-btn'>
           {loading ? 'Calculating...' : 'Calculate Route'}
         </button>
       </form>
